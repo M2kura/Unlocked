@@ -16,5 +16,7 @@ class CityRepository(private val cityDao: CityDao) {
 
     suspend fun deleteCity(city: CityEntity) = cityDao.deleteCity(city)
 
+    suspend fun deleteAllCities() = cityDao.deleteAllCities()
+
     fun getCityCount(): Flow<Int> = cityDao.getCityCount()
 }

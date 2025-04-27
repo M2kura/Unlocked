@@ -3,7 +3,7 @@ package com.example.unlocked.navigation
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.ListAlt
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.ui.graphics.vector.ImageVector
 
@@ -30,8 +30,8 @@ val bottomNavItems = listOf(
         route = Screen.Stats.route
     ),
     BottomNavItem(
-        label = "Profile",
-        icon = Icons.Default.Person,
-        route = Screen.Profile.route
+        label = "Settings",
+        icon = Icons.Default.Settings,
+        route = Screen.Settings.route
     )
 )

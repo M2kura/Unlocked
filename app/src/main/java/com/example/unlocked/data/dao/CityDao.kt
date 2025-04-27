@@ -21,6 +21,9 @@ interface CityDao {
     @Delete
     suspend fun deleteCity(city: CityEntity)
 
+    @Query("DELETE FROM cities")
+    suspend fun deleteAllCities()
+
     @Query("SELECT COUNT(*) FROM cities")
     fun getCityCount(): Flow<Int>
 }

@@ -112,8 +112,8 @@ fun NavigationGraph(
         composable(Screen.Stats.route) {
             StatsScreen()
         }
-        composable(Screen.Profile.route) {
-            ProfileScreen()
+        composable(Screen.Settings.route) {
+            SettingsScreen()
         }
         composable(Screen.AddCity.route) {
             AddCityScreen(
