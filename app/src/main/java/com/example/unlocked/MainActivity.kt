@@ -42,13 +42,24 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen() {
     val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    val showBottomBar = when (currentRoute) {
+        Screen.AddCity.route -> false
+        else -> true
+    }
 
     Scaffold(
-        bottomBar = { BottomNavigationBar(navController) }
+        bottomBar = {
+            if (showBottomBar) {
+                BottomNavigationBar(navController)
+            }
+        }
     ) { innerPadding ->
         NavigationGraph(
             navController = navController,
-            modifier = Modifier.padding(innerPadding)
+            modifier = if (showBottomBar) Modifier.padding(innerPadding) else Modifier
         )
     }
 }
@@ -66,14 +77,10 @@ fun BottomNavigationBar(navController: NavHostController) {
                 selected = currentRoute == item.route,
                 onClick = {
                     navController.navigate(item.route) {
-                        // Pop up to the start destination of the graph to
-                        // avoid building up a large stack of destinations
                         popUpTo(navController.graph.findStartDestination().id) {
                             saveState = true
                         }
-                        // Avoid multiple copies of the same destination
                         launchSingleTop = true
-                        // Restore state when reselecting a previously selected item
                         restoreState = true
                     }
                 }
@@ -93,7 +100,11 @@ fun NavigationGraph(
         modifier = modifier
     ) {
         composable(Screen.List.route) {
-            ListScreen()
+            ListScreen(
+                onAddClick = {
+                    navController.navigate(Screen.AddCity.route)
+                }
+            )
         }
         composable(Screen.Map.route) {
             MapScreen()
@@ -103,6 +114,13 @@ fun NavigationGraph(
         }
         composable(Screen.Profile.route) {
             ProfileScreen()
+        }
+        composable(Screen.AddCity.route) {
+            AddCityScreen(
+                onBackPressed = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }
