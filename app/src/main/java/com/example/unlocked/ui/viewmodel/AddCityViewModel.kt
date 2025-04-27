@@ -1,10 +1,12 @@
 package com.example.unlocked.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.unlocked.data.entity.CityEntity
 import com.example.unlocked.data.repository.CityRepository
+import com.example.unlocked.data.service.WikidataService
 import com.example.unlocked.ui.components.PlaceResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,6 +14,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class AddCityViewModel(private val repository: CityRepository) : ViewModel() {
+    companion object {
+        private const val TAG = "AddCityViewModel"
+    }
 
     private val _saveState = MutableStateFlow<SaveState>(SaveState.Idle)
     val saveState: StateFlow<SaveState> = _saveState.asStateFlow()
@@ -20,6 +25,17 @@ class AddCityViewModel(private val repository: CityRepository) : ViewModel() {
         viewModelScope.launch {
             try {
                 _saveState.value = SaveState.Saving
+
+                Log.d(TAG, "Saving city: ${placeResult.locality} in ${placeResult.country}")
+
+                // Fetch accurate data from Wikidata
+                val wikidataResult = placeResult.locality?.let { cityName ->
+                    Log.d(TAG, "Fetching Wikidata for: $cityName")
+                    WikidataService.getCityData(cityName, placeResult.country)
+                }
+
+                Log.d(TAG, "Wikidata result: $wikidataResult")
+
                 val city = CityEntity(
                     placeId = placeResult.placeId,
                     address = placeResult.address,
@@ -33,12 +49,18 @@ class AddCityViewModel(private val repository: CityRepository) : ViewModel() {
                     viewportNorthEastLng = placeResult.viewport?.northEastLng,
                     viewportSouthWestLat = placeResult.viewport?.southWestLat,
                     viewportSouthWestLng = placeResult.viewport?.southWestLng,
-                    approximateArea = placeResult.approximateArea,
+                    area = wikidataResult?.area,
+                    population = wikidataResult?.population,
+                    elevation = wikidataResult?.elevationAboveSeaLevel,
                     unlockDate = System.currentTimeMillis()
                 )
+
+                Log.d(TAG, "Saving city with area: ${city.area}, population: ${city.population}, elevation: ${city.elevation}")
+
                 repository.insertCity(city)
                 _saveState.value = SaveState.Success
             } catch (e: Exception) {
+                Log.e(TAG, "Error saving city", e)
                 _saveState.value = SaveState.Error(e.message ?: "Failed to save city")
             }
         }

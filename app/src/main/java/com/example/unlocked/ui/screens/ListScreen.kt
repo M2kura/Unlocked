@@ -569,11 +569,27 @@ fun CityDetailsCard(
                 )
             }
 
-            city.approximateArea?.let { area ->
+            city.area?.let { area ->
                 InfoRow(
                     icon = Icons.Default.Landscape,
-                    label = "Approximate Area",
+                    label = "Area",
                     value = String.format("%.2f km²", area)
+                )
+            }
+
+            city.population?.let { population ->
+                InfoRow(
+                    icon = Icons.Default.People,
+                    label = "Population",
+                    value = formatPopulation(population)
+                )
+            }
+
+            city.elevation?.let { elevation ->
+                InfoRow(
+                    icon = Icons.Default.Terrain,
+                    label = "Elevation",
+                    value = String.format("%.0f m", elevation)
                 )
             }
 
@@ -591,6 +607,14 @@ fun CityDetailsCard(
                 )
             }
         }
+    }
+}
+
+fun formatPopulation(population: Int): String {
+    return when {
+        population >= 1_000_000 -> String.format("%.1fM", population / 1_000_000.0)
+        population >= 1_000 -> String.format("%.1fK", population / 1_000.0)
+        else -> population.toString()
     }
 }
 

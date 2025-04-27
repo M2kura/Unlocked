@@ -103,9 +103,13 @@ fun AddCityScreen(
                         place.country?.let {
                             Text("Country: $it")
                         }
-                        place.approximateArea?.let {
-                            Text("Approximate Area: ${String.format("%.2f", it)} km²")
-                        }
+
+                        Text(
+                            text = "Additional data will be fetched from Wikidata",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
                     }
                 }
             }

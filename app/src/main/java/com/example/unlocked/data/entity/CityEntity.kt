@@ -19,7 +19,9 @@ data class CityEntity(
     val viewportNorthEastLng: Double? = null,
     val viewportSouthWestLat: Double? = null,
     val viewportSouthWestLng: Double? = null,
-    val approximateArea: Double? = null, // in km²
+    val area: Double? = null,
+    val population: Int? = null,
+    val elevation: Double? = null, // in meters
     val unlockDate: Long = System.currentTimeMillis(),
     val notes: String? = null
 )
