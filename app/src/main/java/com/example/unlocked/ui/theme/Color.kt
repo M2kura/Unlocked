@@ -1,4 +1,4 @@
-package com.example.pid_tracker.ui.theme
+package com.example.unlocked.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

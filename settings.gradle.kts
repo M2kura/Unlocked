@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "PID-tracker"
+rootProject.name = "Unlocked"
 include(":app")
  

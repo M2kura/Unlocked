@@ -1,4 +1,4 @@
-package com.example.pid_tracker.ui.theme
+package com.example.unlocked.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
