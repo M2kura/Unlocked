@@ -123,7 +123,9 @@ fun ListScreen(
                 title = {
                     Text(
                         if (isSelectionMode) "${selectedCities.size} selected"
-                        else "Unlocked Cities"
+                        else "Unlocked Cities",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Medium
                     )
                 },
                 navigationIcon = {
@@ -163,7 +165,10 @@ fun ListScreen(
                             )
                         }
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             )
         },
         floatingActionButton = {
