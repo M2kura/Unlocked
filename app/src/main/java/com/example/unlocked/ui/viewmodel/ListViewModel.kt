@@ -22,8 +22,8 @@ class ListViewModel(private val repository: CityRepository) : ViewModel() {
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
-    private val _selectedCountry = MutableStateFlow<String?>(null)
-    val selectedCountry: StateFlow<String?> = _selectedCountry.asStateFlow()
+    private val _selectedCountries = MutableStateFlow<Set<String>>(emptySet())
+    val selectedCountries: StateFlow<Set<String>> = _selectedCountries.asStateFlow()
 
     // Get available countries from the cities
     val availableCountries: StateFlow<List<String>> = cities
@@ -39,8 +39,8 @@ class ListViewModel(private val repository: CityRepository) : ViewModel() {
     val filteredCities: StateFlow<List<CityEntity>> = combine(
         cities,
         searchQuery,
-        selectedCountry
-    ) { cityList, query, country ->
+        selectedCountries
+    ) { cityList, query, countries ->
         cityList.filter { city ->
             val matchesSearch = if (query.isEmpty()) {
                 true
@@ -52,10 +52,10 @@ class ListViewModel(private val repository: CityRepository) : ViewModel() {
                         city.address.lowercase().contains(searchLower)
             }
 
-            val matchesCountry = if (country == null) {
+            val matchesCountry = if (countries.isEmpty()) {
                 true
             } else {
-                city.country == country
+                city.country in countries
             }
 
             matchesSearch && matchesCountry
@@ -70,8 +70,16 @@ class ListViewModel(private val repository: CityRepository) : ViewModel() {
         _searchQuery.value = query
     }
 
-    fun setSelectedCountry(country: String?) {
-        _selectedCountry.value = country
+    fun toggleCountryFilter(country: String) {
+        _selectedCountries.value = if (_selectedCountries.value.contains(country)) {
+            _selectedCountries.value - country
+        } else {
+            _selectedCountries.value + country
+        }
+    }
+
+    fun clearCountryFilters() {
+        _selectedCountries.value = emptySet()
     }
 
     fun deleteCity(city: CityEntity) {

@@ -3,12 +3,16 @@ package com.example.unlocked.ui.screens
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -20,6 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.unlocked.UnlockedApplication
 import com.example.unlocked.data.entity.CityEntity
@@ -42,7 +47,7 @@ fun ListScreen(
     val cities by viewModel.cities.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val filteredCities by viewModel.filteredCities.collectAsState()
-    val selectedCountry by viewModel.selectedCountry.collectAsState()
+    val selectedCountries by viewModel.selectedCountries.collectAsState()
     val availableCountries by viewModel.availableCountries.collectAsState()
     val selectedCities = remember { mutableStateListOf<CityEntity>() }
     var isSelectionMode by remember { mutableStateOf(false) }
@@ -50,6 +55,7 @@ fun ListScreen(
     var showDetailsDialog by remember { mutableStateOf(false) }
     var selectedCity by remember { mutableStateOf<CityEntity?>(null) }
     var isSearchVisible by remember { mutableStateOf(false) }
+    var showFilterDialog by remember { mutableStateOf(false) }
 
     // Delete confirmation dialog
     if (showDeleteDialog) {
@@ -96,6 +102,21 @@ fun ListScreen(
         }
     }
 
+    // Country filter dialog
+    if (showFilterDialog) {
+        CountryFilterDialog(
+            availableCountries = availableCountries,
+            selectedCountries = selectedCountries,
+            onDismiss = { showFilterDialog = false },
+            onCountryToggle = { country ->
+                viewModel.toggleCountryFilter(country)
+            },
+            onSelectAll = {
+                viewModel.clearCountryFilters()
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -124,6 +145,17 @@ fun ListScreen(
                             Icon(Icons.Default.Delete, contentDescription = "Delete selected")
                         }
                     } else {
+                        IconButton(onClick = { showFilterDialog = true }) {
+                            Icon(
+                                imageVector = Icons.Default.FilterList,
+                                contentDescription = "Filter",
+                                tint = if (selectedCountries.isNotEmpty()) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    LocalContentColor.current
+                                }
+                            )
+                        }
                         IconButton(onClick = { isSearchVisible = !isSearchVisible }) {
                             Icon(
                                 imageVector = if (isSearchVisible) Icons.Default.Close else Icons.Default.Search,
@@ -164,13 +196,11 @@ fun ListScreen(
                 )
             }
 
-            // Country filter chips
-            if (availableCountries.isNotEmpty() && !isSelectionMode) {
-                CountryFilterChips(
-                    countries = availableCountries,
-                    selectedCountry = selectedCountry,
-                    onCountrySelected = { viewModel.setSelectedCountry(it) },
-                    modifier = Modifier.padding(vertical = 8.dp)
+            // Active filters display
+            if (selectedCountries.isNotEmpty() && !isSelectionMode) {
+                ActiveFiltersRow(
+                    selectedCountries = selectedCountries,
+                    onRemoveCountry = { viewModel.toggleCountryFilter(it) }
                 )
             }
 
@@ -182,7 +212,7 @@ fun ListScreen(
                     Text(
                         text = if (cities.isEmpty()) {
                             "No cities unlocked yet"
-                        } else if (searchQuery.isNotEmpty() || selectedCountry != null) {
+                        } else if (searchQuery.isNotEmpty() || selectedCountries.isNotEmpty()) {
                             "No cities match your filters"
                         } else {
                             "No cities found"
@@ -236,61 +266,133 @@ fun ListScreen(
 }
 
 @Composable
-fun CountryFilterChips(
-    countries: List<String>,
-    selectedCountry: String?,
-    onCountrySelected: (String?) -> Unit,
-    modifier: Modifier = Modifier
+fun CountryFilterDialog(
+    availableCountries: List<String>,
+    selectedCountries: Set<String>,
+    onDismiss: () -> Unit,
+    onCountryToggle: (String) -> Unit,
+    onSelectAll: () -> Unit
 ) {
-    LazyRow(
-        modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        // All countries chip
-        item {
-            FilterChip(
-                selected = selectedCountry == null,
-                onClick = { onCountrySelected(null) },
-                label = { Text("All") },
-                leadingIcon = {
-                    if (selectedCountry == null) {
-                        Icon(
-                            Icons.Default.Check,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+                .fillMaxHeight(0.8f),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column {
+                // Dialog title
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Filter by Country",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    IconButton(onClick = onDismiss) {
+                        Icon(Icons.Default.Close, contentDescription = "Close")
                     }
                 }
-            )
-        }
 
-        // Individual country chips
-        items(countries.sorted()) { country ->
-            FilterChip(
-                selected = selectedCountry == country,
-                onClick = {
-                    onCountrySelected(if (selectedCountry == country) null else country)
-                },
-                label = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Text(CountryFlagUtils.getCountryEmoji(country))
-                        Text(country)
-                    }
-                },
-                leadingIcon = {
-                    if (selectedCountry == country) {
-                        Icon(
-                            Icons.Default.Check,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
+                Divider()
+
+                // "All" option
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onSelectAll() }
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = selectedCountries.isEmpty(),
+                        onClick = { onSelectAll() }
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("All countries")
+                }
+
+                Divider()
+
+                // Country list
+                LazyColumn(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    items(availableCountries.sorted()) { country ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onCountryToggle(country) }
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = selectedCountries.contains(country),
+                                onCheckedChange = null, // Handled by row click
+                                enabled = selectedCountries.isNotEmpty()
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(CountryFlagUtils.getCountryEmoji(country))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(country)
+                        }
                     }
                 }
-            )
+
+                Divider()
+
+                // Apply button
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Apply")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ActiveFiltersRow(
+    selectedCountries: Set<String>,
+    onRemoveCountry: (String) -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 1.dp
+    ) {
+        LazyRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(selectedCountries.toList()) { country ->
+                AssistChip(
+                    onClick = { onRemoveCountry(country) },
+                    label = { Text("${CountryFlagUtils.getCountryEmoji(country)} $country") },
+                    trailingIcon = {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = "Remove filter",
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                )
+            }
         }
     }
 }
