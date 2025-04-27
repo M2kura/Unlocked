@@ -9,14 +9,35 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.unlocked.UnlockedApplication
+import com.example.unlocked.ui.viewmodel.AddCityViewModel
+import com.example.unlocked.ui.viewmodel.AddCityViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddCityScreen(
-    onBackPressed: () -> Unit
+    onBackPressed: () -> Unit,
+    viewModel: AddCityViewModel = viewModel(
+        factory = AddCityViewModelFactory(
+            (LocalContext.current.applicationContext as UnlockedApplication).repository
+        )
+    )
 ) {
     var cityAddress by remember { mutableStateOf("") }
+    val saveState by viewModel.saveState.collectAsState()
+
+    LaunchedEffect(saveState) {
+        when (saveState) {
+            is AddCityViewModel.SaveState.Success -> {
+                onBackPressed()
+                viewModel.resetState()
+            }
+            else -> {}
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -46,17 +67,37 @@ fun AddCityScreen(
                 onValueChange = { cityAddress = it },
                 label = { Text("City Address") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                enabled = saveState !is AddCityViewModel.SaveState.Saving
             )
+
+            if (saveState is AddCityViewModel.SaveState.Error) {
+                Text(
+                    text = (saveState as AddCityViewModel.SaveState.Error).message,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
 
             Spacer(modifier = Modifier.weight(1f))
 
             Button(
                 onClick = {
+                    if (cityAddress.isNotBlank()) {
+                        viewModel.saveCity(cityAddress)
+                    }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = cityAddress.isNotBlank() && saveState !is AddCityViewModel.SaveState.Saving
             ) {
-                Text("Unlock")
+                if (saveState is AddCityViewModel.SaveState.Saving) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Text("Unlock")
+                }
             }
         }
     }
