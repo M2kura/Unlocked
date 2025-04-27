@@ -105,7 +105,8 @@ fun ListScreen(
                     contentDescription = "Add"
                 )
             }
-        }
+        },
+        contentWindowInsets = WindowInsets(0)
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -159,6 +160,8 @@ fun ListScreen(
         }
     }
 }
+
+// Rest of the file remains the same...
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

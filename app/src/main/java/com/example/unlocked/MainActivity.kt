@@ -4,11 +4,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -55,11 +55,16 @@ fun MainScreen() {
             if (showBottomBar) {
                 BottomNavigationBar(navController)
             }
+        },
+        contentWindowInsets = if (showBottomBar) {
+            WindowInsets.navigationBars
+        } else {
+            WindowInsets(0)
         }
     ) { innerPadding ->
         NavigationGraph(
             navController = navController,
-            modifier = if (showBottomBar) Modifier.padding(innerPadding) else Modifier
+            modifier = Modifier.padding(innerPadding)
         )
     }
 }
