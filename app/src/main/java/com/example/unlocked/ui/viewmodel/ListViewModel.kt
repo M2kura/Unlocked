@@ -5,9 +5,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.unlocked.data.entity.CityEntity
 import com.example.unlocked.data.repository.CityRepository
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 
 class ListViewModel(private val repository: CityRepository) : ViewModel() {
 
@@ -17,6 +16,37 @@ class ListViewModel(private val repository: CityRepository) : ViewModel() {
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    val filteredCities: StateFlow<List<CityEntity>> = combine(cities, searchQuery) { cityList, query ->
+        if (query.isEmpty()) {
+            cityList
+        } else {
+            cityList.filter { city ->
+                val searchLower = query.lowercase()
+                city.locality?.lowercase()?.contains(searchLower) == true ||
+                        city.country?.lowercase()?.contains(searchLower) == true ||
+                        city.administrativeArea?.lowercase()?.contains(searchLower) == true ||
+                        city.address.lowercase().contains(searchLower)
+            }
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    fun setSearchQuery(query: String) {
+        _searchQuery.value = query
+    }
+
+    fun deleteCity(city: CityEntity) {
+        viewModelScope.launch {
+            repository.deleteCity(city)
+        }
+    }
 }
 
 class ListViewModelFactory(private val repository: CityRepository) : ViewModelProvider.Factory {
