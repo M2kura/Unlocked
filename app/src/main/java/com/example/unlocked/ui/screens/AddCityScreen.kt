@@ -13,6 +13,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.unlocked.UnlockedApplication
+import com.example.unlocked.ui.components.PlaceResult
+import com.example.unlocked.ui.components.PlacesAutocompleteTextField
 import com.example.unlocked.ui.viewmodel.AddCityViewModel
 import com.example.unlocked.ui.viewmodel.AddCityViewModelFactory
 
@@ -27,6 +29,7 @@ fun AddCityScreen(
     )
 ) {
     var cityAddress by remember { mutableStateOf("") }
+    var selectedPlace by remember { mutableStateOf<PlaceResult?>(null) }
     val saveState by viewModel.saveState.collectAsState()
 
     LaunchedEffect(saveState) {
@@ -62,14 +65,50 @@ fun AddCityScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            OutlinedTextField(
+            PlacesAutocompleteTextField(
                 value = cityAddress,
                 onValueChange = { cityAddress = it },
-                label = { Text("City Address") },
+                onPlaceSelected = { placeResult ->
+                    selectedPlace = placeResult
+                    cityAddress = placeResult.address
+                },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
                 enabled = saveState !is AddCityViewModel.SaveState.Saving
             )
+
+            // Show selected place details
+            selectedPlace?.let { place ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Selected Place Details",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        place.locality?.let {
+                            Text("City: $it")
+                        }
+                        place.administrativeArea?.let {
+                            Text("State/Province: $it")
+                        }
+                        place.country?.let {
+                            Text("Country: $it")
+                        }
+                        place.approximateArea?.let {
+                            Text("Approximate Area: ${String.format("%.2f", it)} km²")
+                        }
+                    }
+                }
+            }
 
             if (saveState is AddCityViewModel.SaveState.Error) {
                 Text(
@@ -83,12 +122,12 @@ fun AddCityScreen(
 
             Button(
                 onClick = {
-                    if (cityAddress.isNotBlank()) {
-                        viewModel.saveCity(cityAddress)
+                    selectedPlace?.let { place ->
+                        viewModel.saveCity(place)
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = cityAddress.isNotBlank() && saveState !is AddCityViewModel.SaveState.Saving
+                enabled = selectedPlace != null && saveState !is AddCityViewModel.SaveState.Saving
             ) {
                 if (saveState is AddCityViewModel.SaveState.Saving) {
                     CircularProgressIndicator(

@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.unlocked.data.entity.CityEntity
 import com.example.unlocked.data.repository.CityRepository
+import com.example.unlocked.ui.components.PlaceResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,12 +16,24 @@ class AddCityViewModel(private val repository: CityRepository) : ViewModel() {
     private val _saveState = MutableStateFlow<SaveState>(SaveState.Idle)
     val saveState: StateFlow<SaveState> = _saveState.asStateFlow()
 
-    fun saveCity(address: String) {
+    fun saveCity(placeResult: PlaceResult) {
         viewModelScope.launch {
             try {
                 _saveState.value = SaveState.Saving
                 val city = CityEntity(
-                    address = address,
+                    placeId = placeResult.placeId,
+                    address = placeResult.address,
+                    latitude = placeResult.latitude,
+                    longitude = placeResult.longitude,
+                    country = placeResult.country,
+                    administrativeArea = placeResult.administrativeArea,
+                    locality = placeResult.locality,
+                    formattedAddress = placeResult.formattedAddress,
+                    viewportNorthEastLat = placeResult.viewport?.northEastLat,
+                    viewportNorthEastLng = placeResult.viewport?.northEastLng,
+                    viewportSouthWestLat = placeResult.viewport?.southWestLat,
+                    viewportSouthWestLng = placeResult.viewport?.southWestLng,
+                    approximateArea = placeResult.approximateArea,
                     unlockDate = System.currentTimeMillis()
                 )
                 repository.insertCity(city)
