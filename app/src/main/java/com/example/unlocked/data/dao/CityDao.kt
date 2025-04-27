@@ -26,4 +26,10 @@ interface CityDao {
 
     @Query("SELECT COUNT(*) FROM cities")
     fun getCityCount(): Flow<Int>
+
+    @Query("SELECT * FROM cities WHERE locality = :locality AND country = :country LIMIT 1")
+    suspend fun getCityByLocalityAndCountry(locality: String, country: String): CityEntity?
+
+    @Query("SELECT * FROM cities WHERE placeId = :placeId LIMIT 1")
+    suspend fun getCityByPlaceId(placeId: String): CityEntity?
 }

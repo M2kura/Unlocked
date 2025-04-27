@@ -28,7 +28,17 @@ class AddCityViewModel(private val repository: CityRepository) : ViewModel() {
 
                 Log.d(TAG, "Saving city: ${placeResult.locality} in ${placeResult.country}")
 
-                // Fetch accurate data from Wikidata
+                val cityExists = repository.isCityExists(
+                    locality = placeResult.locality,
+                    country = placeResult.country,
+                    placeId = placeResult.placeId
+                )
+
+                if (cityExists) {
+                    _saveState.value = SaveState.Error("This city has already been unlocked")
+                    return@launch
+                }
+
                 val wikidataResult = placeResult.locality?.let { cityName ->
                     Log.d(TAG, "Fetching Wikidata for: $cityName")
                     WikidataService.getCityData(cityName, placeResult.country)

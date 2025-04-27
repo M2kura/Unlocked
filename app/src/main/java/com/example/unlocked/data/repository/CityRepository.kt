@@ -19,4 +19,16 @@ class CityRepository(private val cityDao: CityDao) {
     suspend fun deleteAllCities() = cityDao.deleteAllCities()
 
     fun getCityCount(): Flow<Int> = cityDao.getCityCount()
+
+    suspend fun isCityExists(locality: String?, country: String?, placeId: String?): Boolean {
+        placeId?.let { pid ->
+            cityDao.getCityByPlaceId(pid)?.let { return true }
+        }
+
+        if (locality != null && country != null) {
+            cityDao.getCityByLocalityAndCountry(locality, country)?.let { return true }
+        }
+
+        return false
+    }
 }
