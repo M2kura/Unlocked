@@ -20,6 +20,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.unlocked.UnlockedApplication
 import com.example.unlocked.data.entity.CityEntity
+import com.example.unlocked.ui.utils.CountryFlagUtils
 import com.example.unlocked.ui.viewmodel.ListViewModel
 import com.example.unlocked.ui.viewmodel.ListViewModelFactory
 import java.text.SimpleDateFormat
@@ -182,7 +183,7 @@ fun CityListItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = getCountryEmoji(city.country),
+                text = CountryFlagUtils.getCountryEmoji(city.country),
                 style = MaterialTheme.typography.headlineMedium,
                 modifier = Modifier.padding(end = 16.dp)
             )
@@ -281,7 +282,7 @@ fun CityDetailsCard(
             InfoRow(
                 icon = Icons.Default.Flag,
                 label = "Country",
-                value = "${getCountryEmoji(city.country)} ${city.country ?: "Unknown"}"
+                value = "${CountryFlagUtils.getCountryEmoji(city.country)} ${city.country ?: "Unknown"}"
             )
 
             city.administrativeArea?.let { state ->
@@ -355,32 +356,6 @@ fun InfoRow(
                 style = MaterialTheme.typography.bodyMedium
             )
         }
-    }
-}
-
-fun getCountryEmoji(countryName: String?): String {
-    return when (countryName?.lowercase()) {
-        "united states", "usa", "us" -> "🇺🇸"
-        "united kingdom", "uk", "england", "scotland", "wales", "northern ireland" -> "🇬🇧"
-        "france" -> "🇫🇷"
-        "germany" -> "🇩🇪"
-        "spain" -> "🇪🇸"
-        "italy" -> "🇮🇹"
-        "canada" -> "🇨🇦"
-        "japan" -> "🇯🇵"
-        "china" -> "🇨🇳"
-        "india" -> "🇮🇳"
-        "brazil" -> "🇧🇷"
-        "mexico" -> "🇲🇽"
-        "australia" -> "🇦🇺"
-        "netherlands" -> "🇳🇱"
-        "sweden" -> "🇸🇪"
-        "norway" -> "🇳🇴"
-        "denmark" -> "🇩🇰"
-        "finland" -> "🇫🇮"
-        "poland" -> "🇵🇱"
-        "russia" -> "🇷🇺"
-        else -> "🏳️"
     }
 }
 
