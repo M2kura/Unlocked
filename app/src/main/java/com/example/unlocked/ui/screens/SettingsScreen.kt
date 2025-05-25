@@ -21,6 +21,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.unlocked.UnlockedApplication
+import com.example.unlocked.ui.components.openNotificationSettings
+import com.example.unlocked.utils.NotificationUtils
 import com.example.unlocked.ui.viewmodel.SettingsViewModel
 import com.example.unlocked.ui.viewmodel.SettingsViewModelFactory
 
@@ -29,7 +31,9 @@ import com.example.unlocked.ui.viewmodel.SettingsViewModelFactory
 fun SettingsScreen(
     viewModel: SettingsViewModel = viewModel(
         factory = SettingsViewModelFactory(
-            (LocalContext.current.applicationContext as UnlockedApplication).repository
+            repository = (LocalContext.current.applicationContext as UnlockedApplication).repository,
+            preferencesManager = (LocalContext.current.applicationContext as UnlockedApplication).preferencesManager,
+            context = LocalContext.current
         )
     )
 ) {
@@ -97,6 +101,67 @@ fun SettingsScreen(
                 .padding(paddingValues)
                 .verticalScroll(scrollState)
         ) {
+            // Notifications Section
+            SettingsSection(
+                title = "Notifications",
+                icon = Icons.Default.Notifications
+            ) {
+                val context = LocalContext.current
+                val weeklyNotificationsEnabled by viewModel.weeklyNotificationsEnabled.collectAsState(initial = true)
+                val hasNotificationPermission = NotificationUtils.hasNotificationPermission(context)
+
+                SettingsToggleItem(
+                    title = "Weekly Statistics",
+                    description = if (hasNotificationPermission) {
+                        "Get weekly reminders about your travel progress"
+                    } else {
+                        "Requires notification permission (tap to enable in settings)"
+                    },
+                    icon = Icons.Default.Schedule,
+                    checked = weeklyNotificationsEnabled && hasNotificationPermission,
+                    onCheckedChange = { enabled ->
+                        if (enabled && !hasNotificationPermission) {
+                            // Open settings if permission not granted
+                            openNotificationSettings(context)
+                        } else {
+                            viewModel.setWeeklyNotificationsEnabled(enabled)
+                        }
+                    }
+                )
+
+                if (weeklyNotificationsEnabled && !hasNotificationPermission) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Notification permission required for weekly reminders",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             // App Information Section
             SettingsSection(
                 title = "App Information",
@@ -203,6 +268,49 @@ fun SettingsSection(
         ) {
             content()
         }
+    }
+}
+
+@Composable
+fun SettingsToggleItem(
+    title: String,
+    description: String,
+    icon: ImageVector,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.size(24.dp)
+        )
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Medium
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange
+        )
     }
 }
 
