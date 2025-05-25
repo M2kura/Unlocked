@@ -21,7 +21,11 @@ class SettingsViewModel(
     private val _deleteState = MutableStateFlow<DeleteState>(DeleteState.Idle)
     val deleteState: StateFlow<DeleteState> = _deleteState.asStateFlow()
 
+    // Reference to the actual Flow from PreferencesManager
     val weeklyNotificationsEnabled = preferencesManager.weeklyNotificationsEnabled
+
+    // Add this new property for marker color
+    val markerColor = preferencesManager.markerColor
 
     fun deleteAllData() {
         viewModelScope.launch {
@@ -43,6 +47,13 @@ class SettingsViewModel(
             } else {
                 NotificationScheduler.cancelWeeklyNotifications(context)
             }
+        }
+    }
+
+    // Add this new function for setting marker color
+    fun setMarkerColor(colorHex: String) {
+        viewModelScope.launch {
+            preferencesManager.setMarkerColor(colorHex)
         }
     }
 

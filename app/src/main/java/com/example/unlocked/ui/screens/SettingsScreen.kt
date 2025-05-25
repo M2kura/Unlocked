@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.unlocked.UnlockedApplication
+import com.example.unlocked.ui.components.MapColorPicker
 import com.example.unlocked.ui.components.openNotificationSettings
 import com.example.unlocked.utils.NotificationUtils
 import com.example.unlocked.ui.viewmodel.SettingsViewModel
@@ -157,6 +158,23 @@ fun SettingsScreen(
                             )
                         }
                     }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            SettingsSection(
+                title = "Map Settings",
+                icon = Icons.Default.Map
+            ) {
+                Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                    val markerColor by viewModel.markerColor.collectAsState(initial = "#FF0000")
+
+                    MapColorPicker(
+                        selectedColor = markerColor,
+                        onColorSelected = { colorHex -> viewModel.setMarkerColor(colorHex) },
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
                 }
             }
 
